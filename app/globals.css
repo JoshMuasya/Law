@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.back-pic-dark {
+  background-image: url('/landingdark.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.back-pic-light {
+  background-image: url('/landing.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
