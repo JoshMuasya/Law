@@ -21,6 +21,8 @@ const Signup = () => {
         password_confirmation: '',
     });
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [error, setError] = useState('')
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,6 +34,7 @@ const Signup = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true)
 
         const response = await fetch('http://127.0.0.1:8000/lawyers/register/', {
             method: 'POST',
@@ -44,6 +47,7 @@ const Signup = () => {
         if (response.ok) {
             console.log('Signup Successful');
             resetForm();
+            window.location.href = '../auth/login'
         } else {
             console.log('Signup Failure');
         };
@@ -160,8 +164,9 @@ const Signup = () => {
                             <button 
                                 className='font-tinos font-bold text-s m:text-lm'
                                 type='submit'
+                                disabled={isLoading}
                             >
-                                SIGNUP
+                                {isLoading ? <div className='loading loading-spinner'></div> : 'SIGNUP'}
                             </button>
                         </div>
                     </div>

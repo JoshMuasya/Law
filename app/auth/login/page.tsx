@@ -28,6 +28,7 @@ const Login = () => {
         password: '',
     });
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData((prevData) => ({
@@ -38,6 +39,7 @@ const Login = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
 
         const response = await fetch('http://127.0.0.1:8000/lawyers/login/', {
             method: 'POST',
@@ -63,6 +65,7 @@ const Login = () => {
         } else {
             console.log('Login Failed');
             resetForm();
+            setError("The fields can't be empty");
         };
     };
 
@@ -125,8 +128,9 @@ const Login = () => {
                             <button
                                 className='font-tinos font-bold text-s m:text-l'
                                 type='submit'
+                                disabled={isLoading}
                             >
-                                LOGIN
+                                {isLoading ? <div className='loading loading-spinner'></div> : 'LOGIN'}
                             </button>
                         </div>
                     </div>

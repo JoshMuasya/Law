@@ -3,15 +3,25 @@
 import React, { useState, useEffect } from 'react'
 
 import LawyerCard from '../components/LawyerCard';
+import Link from 'next/link';
+
+interface CaseType {
+  id: number;
+  case_number: string;
+  case_description: string;
+  case_logged: string;
+  next_hearing: string;
+  lawyer: number;
+}
 
 const Home = () => {
-  const [lawyerNames, setLawyerNames] = useState<string[]>([]);
-  
+  const [casesArray, setCasesArray] = useState<CaseType[]>([])
+
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
+
     if (token) {
-      fetch('http://127.0.0.1:8000/lawyers/lawyers', {
+      const casesPromise = fetch('http://127.0.0.1:8000/cases/cases', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -23,45 +33,25 @@ const Home = () => {
           return response.json();
         } else {
           console.log("Request failed:", response.status)
+          throw new Error('Failed to fetch cases')
         }
-      })
-      .then(data => {
-        if (data && Array.isArray(data)) {
-          const lawyers = data.filter(item => item.rank.toLowerCase() === 'owner');
-          setLawyerNames(lawyers.map(lawyer => lawyer.username));
-        }
-        console.log('Data:', data);
+      });
+
+      Promise.all([ casesPromise ])
+      .then(([ casesData ]) => {
+        setCasesArray(casesData);
       })
       .catch(error => {
-        console.log('Error:', error);
-      });
+        console.error('Error:', error.message);
+      })
     } else {
       console.log('Check Authentication details');
     }
   }, []);
 
-  const getRandomLawyerNames = () => {
-    if (lawyerNames.length < 4) {
-      return lawyerNames
-    }
-
-    const randomIndices: number[] = [];
-    while (randomIndices.length < 4) {
-      const randomIndex = Math.floor(Math.random() * lawyerNames.length);
-      if (!randomIndices.includes(randomIndex)) {
-        randomIndices.push(randomIndex);
-      }
-    }
-
-    return [
-      lawyerNames[randomIndices[0]], 
-      lawyerNames[randomIndices[1]], 
-      lawyerNames[randomIndices[2]], 
-      lawyerNames[randomIndices[3]],
-    ]
-  };
-
-  const [randomLawyerName1, randomLawyerName2, randomLawyerName3, randomLawyerName4] = getRandomLawyerNames();
+  const latestCases: CaseType[] = casesArray
+  .sort((a, b) => new Date(a.next_hearing).getTime() - new Date(b.next_hearing).getTime())
+  .slice(0, 3);
 
   return (
     <div className='w-full h-full m:h-screen flex flex-col justify-center align-middle items-center back-pic-dark bg-fixed bg-cover pt-16 pb-14'>
@@ -76,44 +66,38 @@ const Home = () => {
             <div className="card-body flex flex-col justify-center items-center align-middle">
               <h2 className="card-title font-black font-mont text-lg pb-3">LAWYERS</h2>
               <div className='flex flex-col m:flex-row justify-center items-center align-middle font-tinos text-sx'>
-                <div>
-                  <LawyerCard
-                    lawyerName={randomLawyerName1}
-                    caseNumber='001'
-                    nextHearing='0800 30.01.2024'
-                  />
-
-                  <LawyerCard
-                    lawyerName={randomLawyerName2}
-                    caseNumber='002'
-                    nextHearing='0800 30.02.2024'
-                  />
-                </div>
-
-                <div>
-                  <LawyerCard
-                    lawyerName={randomLawyerName3}
-                    caseNumber='003'
-                    nextHearing='0800 30.03.2024'
-                  />
-
-                  <LawyerCard
-                    lawyerName={randomLawyerName4}
-                    caseNumber='004'
-                    nextHearing='0800 30.04.2024'
-                  />
-                </div>
+                {latestCases.map((latestCase) => (
+                  <div key={latestCase.id}>
+                    <LawyerCard
+                      lawyerName={latestCase.lawyer}
+                      caseNumber={latestCase.case_number}
+                      nextHearing={latestCase.next_hearing}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Right */}
           <div className="card w-96 bg-primary text-primary-content mb-10 m:mb-0">
-            <div className="card-body">
-              <h2 className="card-title">Card title!</h2>
-              <p>If a dog chews shoes whose shoes does he choose?</p>
-              <div className="card-actions justify-end">
-                <button className="btn">Buy Now</button>
+            <div className="card-body font-tinos">
+              <h2 className="card-title font-black font-mont text-lg pb-3">CASES</h2>
+              <p className='font-semibold text-lm'>Add or View Cases</p>
+              <div className="card-actions justify-between">
+                <Link 
+                  href='/home/cases'
+                  className="btn"
+                >
+                    Add Case
+                </Link>
+
+                <Link 
+                  href='/home/cases/view'
+                  className="btn"
+                >
+                    View Cases
+                </Link>
               </div>
             </div>
           </div>
