@@ -1,104 +1,186 @@
-import React from 'react'
+"use client"
 
-const ViewDropdown = () => {
-  return (
-    <div className='flex flex-col justify-center align-middle items-center'>
-        <div tabIndex={0} className="collapse collapse-arrow border border-base-300 bg-base-200 w-2/3">
-            <div className="collapse-title text-xl font-medium">
-              {/* top */}
-              <div className='flex flex-row justify-center align-middle items-center text-lg font-mont'>
-                {/* Location */}
-                <div>
-                  Milimani
-                </div>
+import React, { useState, useEffect } from 'react';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 
-                {/* court */}
-                <div>
-                  High Court
-                </div>
-
-                {/* Case Number */}
-                <div>
-                  4846 of 2019
-                </div>
-
-                {/* Case Name */}
-                <div>
-                  Ecobank vs ABCD
-                </div>
-              </div>
-
-              {/* bottom */}
-              <div className='flex flex-row justify-between align-middle items-center text-lm font-tinos'>
-                {/* department */}
-                <div>
-                  Civil
-                </div>
-
-                {/* Status */}
-                <div className='text-accent font-bold'>
-                  Active
-                </div>
-              </div>
-
-            </div>
-            <div className="collapse-content"> 
-              {/* Top */}
-              <div className='font-mont text-sx pb-5'>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris a porttitor sem. Vestibulum nec fringilla augue. Cras hendrerit quam eu varius pretium. Ut vel enim volutpat lectus tincidunt pulvinar. Nunc molestie lectus in ante posuere efficitur. Praesent diam erat, dictum eu mi in, efficitur imperdiet turpis. Fusce porttitor euismod justo, sit amet elementum est tincidunt eu. Curabitur magna neque, semper vel sodales at, imperdiet nec ipsum.
-                Proin eleifend arcu a mauris viverra porta. Donec placerat, sem sed posuere tempor, tortor risus tincidunt elit, et elementum diam mauris a augue. Sed lacinia sit amet tellus placerat hendrerit. In elementum tempor tortor sed egestas. In a ipsum non felis sodales euismod laoreet sit amet urna. Integer sit amet molestie lorem, sit amet posuere metus. Sed id turpis id arcu consequat consequat. Donec in semper augue. Donec pulvinar velit a urna sollicitudin pharetra. Sed dictum dolor sit amet purus suscipit, dictum malesuada ligula imperdiet. Ut condimentum est eget gravida laoreet.
-              </div>
-
-              {/* Bottom */}
-              <div className='font-mont text-sx'>
-                <div className="overflow-x-auto">
-                  <table className="table">
-                    {/* head */}
-                    <thead>
-                      <tr className='text-lm text-accent'>
-                        <th></th>
-                        <th></th>
-                        <th>Last Activity</th>
-                        <th>Next Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* row 1 */}
-                      <tr className="bg-base-200">
-                        <th className='text-accent'>1</th>
-                        <td>Hearing Date</td>
-                        <td>23/11/2023</td>
-                        <td>23/02/2024</td>
-                      </tr>
-                      {/* row 2 */}
-                      <tr>
-                        <th className='text-accent'>2</th>
-                        <td>Judgement Date</td>
-                        <td></td>
-                        <td>25/03/2024</td>
-                      </tr>
-                      {/* row 3 */}
-                      <tr>
-                        <th className='text-accent'>3</th>
-                        <td>Submission Date</td>
-                        <td>20/11/2023</td>
-                        <td></td>
-                      </tr>
-                      {/* row 4 */}
-                      <tr>
-                        <th className='text-accent'>4</th>
-                        <td>Mention Date</td>
-                        <td>15/12/2023</td>
-                        <td>25/03/2024</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-        </div>
-    </div>
-  )
+interface DateHistoryType {
+    id: number;
+    date_name: string;
+    date_value: string;
 }
+
+interface DropdownProps {
+    location: string;
+    court: string;
+    caseNo: string;
+    caseName: string;
+    summary: string;
+    date_histories: DateHistoryType[];
+    case_id: number;
+}
+
+interface ViewDropdownProps extends DropdownProps {
+    onDataUpdated: () => void;
+}
+
+const ViewDropdown: React.FC<ViewDropdownProps> = ({ location, court, caseNo, caseName, summary, date_histories, case_id, onDataUpdated }) => {
+    const [showDetails, setShowDetails] = useState(false);
+    const [date_name, setDate_name] = useState('');
+    const [date_value, setDate_value] = useState('');
+
+    const toggleDetails = () => {
+        setShowDetails(!showDetails);
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        if (name === 'date_name') {
+            setDate_name(value);
+        } else if (name === 'date_value') {
+            setDate_value(value);
+        }
+    }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const newDateHistory = {
+            date_name: date_name,
+            date_value: date_value,
+            case: case_id,
+        };
+
+        console.log("CaseID:", case_id)
+        console.log("Date:", date_value)
+        console.log("Request Payload:", JSON.stringify(newDateHistory));
+
+        fetch('http://127.0.0.1:8000/cases/date-histories/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newDateHistory),
+        })
+        .then(response => {
+            console.log(response);
+            if (response.ok) {
+                console.log('Date history submitted successfully');
+
+                onDataUpdated();
+
+                setDate_name('')
+                setDate_value('')
+
+            } else {
+                console.log('Failed to submit, Check Date formart')
+            }
+        })
+        .catch(error => {
+            console.error('Error', error);
+        })
+    }
+
+    return (
+        <div className="bg-base-100 p-4 rounded shadow-md text-neutral-content w-full">
+            <div className="flex justify-between items-center mb-4 w-full">
+                <div className='flex flex-row justify-between items-center align-middle w-full text-lm font-bold'>
+                    {/* Location */}
+                    <div className=''>
+                        {location}
+                    </div>
+
+                    {/* Court */}
+                    <div>
+                        {court}
+                    </div>
+
+                    {/* Case Number */}
+                    <div>
+                        {caseNo}
+                    </div>
+
+                    {/* Case Name */}
+                    <div>
+                        {caseName}
+                    </div>
+                </div>
+                <button
+                    className="text-neutral-content hover:text-info"
+                    onClick={toggleDetails}
+                >
+                    {
+                        showDetails ? <ArrowDropUpIcon className='text-xl'/> : <ArrowDropDownIcon className='text-xl'/>
+                    }
+                </button>
+            </div>
+
+            {showDetails && (
+                <div>
+                    <p className="mb-4">
+                        {summary}
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="mb-4">
+                        {/* Date Name */}
+                        <label htmlFor="date_name" className="block text-sx font-medium text-primary-content">
+                            Date Name:
+                        </label>
+                        <input
+                            type="text"
+                            id="date_name"
+                            name="date_name"
+                            value={date_name}
+                            onChange={handleInputChange}
+                            className="mt-1 p-2 border rounded w-full"
+                        />
+
+                        {/* Date Value */}
+                        <label htmlFor="date_value" className="block mt-4 text-sx font-medium text-primary-content">
+                            Date Value:
+                        </label>
+                        <input
+                            type="text"
+                            id="date_value"
+                            name="date_value"
+                            placeholder='YYYY-MM-DD'
+                            value={date_value}
+                            onChange={handleInputChange}
+                            className="mt-1 p-2 border rounded w-full"
+                        />
+
+                        <button
+                            type="submit"
+                            className="mt-4 bg-primary text-primary-content px-4 py-2 rounded hover:bg-info"
+                        >
+                            Submit
+                        </button>
+                    </form>
+
+                    <table className="w-full">
+                        <thead>
+                            <tr>
+                                <th className="border p-2">Date Name</th>
+                                <th className="border p-2">Date Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {date_histories.map((history) => (
+                                <tr>
+                                    <td className="border p-2">
+                                        {history.date_name}
+                                    </td>
+                                    <td className="border p-2">
+                                        {history.date_value}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default ViewDropdown
